@@ -9,8 +9,9 @@ data/processed/
 # 标注样本与标注结果含原文，不入仓；模板与手册入仓
 data/annotation/*
 !data/annotation/.gitkeep
-report/*.md
-!report/.gitkeep
+# report/*.md 入仓：它们是这套方法最直接的可信度证据。
+# 入仓前提是过 `scripts/check_publish.py` 闸门（无个人标识、逐字引用 ≤15 字），
+# 该闸门在 `repro/run_all.sh` 末尾自动跑。政策说明见 `report/README.md`。
 
 # 缓存与临时
 .pytest_tmp/

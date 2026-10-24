@@ -200,17 +200,26 @@ python scripts/calibrate_g1.py
 
 编码手册见 `docs/编码手册_攻击对象.md`。门槛写在 `config.MIN_KAPPA`（0.70）。
 
+## 实证结果
+
+`report/` 里是**代码直接生成的**实证结果，不是手写结论：主分析、三份语料的指标可算性对照、
+敏感性检验、人工标注与词表的对照、中文语料上的 G1 校准。每份都能用
+`bash repro/run_all.sh` 重建。读法与「哪些数字不能引用」写在 `report/README.md`。
+
 ## 测试
 
 ```bash
 pytest -q            # 151 个测试，覆盖 schema/规范化/导入/普查/指标/统计/端到端
 pytest -m live       # 可选：4 项真实网络连通性与合规检查（需自备抓取环境）
 bash repro/run_all.sh  # 端到端复现：三份语料 + 交叉检验，产出全部报告
+python scripts/check_publish.py  # 报告公开前的合规闸门（run_all.sh 末尾自动跑）
 ```
 
 ## 数据与合规
 
 - 原始语料**不入仓**。仓内只含合成样本与人工改写示例。
+- **报告入仓**，但过闸门：逐字引用 ≤15 字、无 @handle/邮箱/ID/绝对路径。
+  这不是承诺，是 `scripts/check_publish.py` 的检查项，违规即非零退出。
 - 作者标识一律加盐哈希；`export` 默认 `text_mode=truncate`，对外发布用 `drop`。
 - 若自行采集：先读目标站点 `robots.txt` 并用 `urllib.robotparser` 判定（不要肉眼扫），
   只抓公开页面、单线程、低频、不绕过任何技术措施。

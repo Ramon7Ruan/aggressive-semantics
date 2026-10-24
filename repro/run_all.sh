@@ -120,7 +120,13 @@ for r in ("report/kappa.md", "report/g1_calibration.md"):
     p = pathlib.Path(r)
     if has_ann:
         print(f"  报告 {r:34s} {'ok' if p.exists() else '缺失'}")
-    else:
+    else
         print(f"  报告 {r:34s} 跳过（需人工标注）")
 PY
+
+# 公开合规闸门：report/*.md 要进公开仓库，所以每次重建后都过一遍。
+# 不走这个闸门就推，等于靠肉眼保证「没夹带原文」——那不是保证。
+echo "== 公开合规闸门（report/*.md）"
+$PY scripts/check_publish.py
+
 echo "完成。"
