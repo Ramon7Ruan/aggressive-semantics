@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# discourse-kit 的统一入口：自动选一个能用的解释器，然后转给 CLI。
+#
+# 选择顺序：DK_PY > .venv > 环境变量指向的隔离环境 > python3
+# 之所以需要它：本项目依赖 pandas/lxml，系统 python3 通常没有，
+# 而每次手敲 venv 的绝对路径既长又容易错。
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+pick() {
+  if [[ -n "${DK_PY:-}" && -x "${DK_PY}" ]]; then echo "$DK_PY"; return; fi
+  if [[ -x "$ROOT/.venv/bin/python" ]]; then echo "$ROOT/.venv/bin/python"; return; fi
+  echo "python3"
+}
+
+PY="$(pick)"
+
+# 尽早报错：缺依赖时给出可执行的修法，而不是让它抛 traceback
+if ! "$PY" -c "import pandas, lxml" >/dev/null 2>&1; then
+  echo "当前解释器缺依赖：$PY" >&2
+  echo "请先执行：$PY -m pip install -r $ROOT/requirements.txt" >&2
+  exit 1
+fi
+
+cd "$ROOT"
+exec "$PY" -m discourse_kit.cli "$@"

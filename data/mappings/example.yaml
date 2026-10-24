@@ -1,0 +1,37 @@
+# 字段映射示例（把某个数据集的列名对到 schema v1）
+#
+# 用法：
+#   python -m discourse_kit.cli sniff data/raw/xxx.csv            # 先看结构
+#   python -m discourse_kit.cli sniff data/raw/xxx.csv --write-mapping data/mappings/xxx.yaml
+#   python -m discourse_kit.cli run --file data/raw/xxx.csv --mapping data/mappings/xxx.yaml
+#
+# 规则：
+# - `fields` 的键必须是 schema v1 的字段名（必填：doc_id / thread_id / text；
+#   unit 可由 unit_default 提供）
+# - 值可以是：
+#     "列名"                      → 直接取该列
+#     ["列A", "列B"]              → 取第一个非空
+#     {columns: [...], join: ":"} → 拼接
+# - `constants` 里的键值会补到每一行（适合"这批全是豆瓣"这种情形）
+# - 映射引用了源文件不存在的列时，导入会**直接报错**而不是跳过——宁可停下
+
+source: demo-dataset
+file: data/raw/demo/units_raw.csv
+encoding: auto
+delimiter: auto
+unit_default: reply
+
+constants:
+  platform: demo
+  board: 社会话题
+
+fields:
+  doc_id: 序号
+  thread_id: 帖子ID
+  text: 内容
+  author_id: 用户名
+  posted_at: 发布时间
+  topic_title: 话题标题
+  floor_no: 楼层
+  # reply_count: 回复数
+  # view_count: 浏览数

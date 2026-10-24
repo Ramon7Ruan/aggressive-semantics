@@ -1,0 +1,31 @@
+# 数据与产物
+# 原始语料与中间文件含平台原文与个人信息，一律不入仓（见 README「数据为什么不入仓」）
+data/raw/*
+!data/raw/.gitkeep
+# 例外：合成示例是用脚本生成的假数据，不含任何真实发言，测试与 demo 需要它
+!data/raw/demo/
+data/processed/
+!data/processed/.gitkeep
+# 标注样本与标注结果含原文，不入仓；模板与手册入仓
+data/annotation/*
+!data/annotation/.gitkeep
+report/*.md
+!report/.gitkeep
+
+# 缓存与临时
+.pytest_tmp/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.DS_Store
+
+# 数据库
+*.db
+*.db-wal
+*.db-shm
+
+# 模型缓存
+data/processed/llm_cache.jsonl

@@ -1,0 +1,134 @@
+# weibo16 话题编码表 —— 严格版（仅用于敏感性检验，不是主分析）
+#
+# 与 weibo16_topics.yaml 的唯一差别：红黄蓝、马云谈996 两个置信度 medium 的话题
+# 从 T3 改判为 T5。这两例的争点都说得通（量刑制度 vs 具体当事人；工时制度 vs 马云其人），
+# 若结论完全依赖它们，说明分类本身不稳。
+#
+# 严格版分组：T3 4 个（sex、代孕、瑞丽疫情、疫苗），T5 12 个。
+# 置换检验的分组数为 C(16,4)=1820 种，仍可穷举精确 p。
+#
+# 用法见 scripts/sensitivity_check.py，结果写入 report/sensitivity.md。
+
+# weibo16 话题编码表（人工编码，v1）
+#
+# 这份文件是研究的**自变量定义**，不是配置文件。改动它等于改动研究设计，
+# 所以每一次修改都必须留下依据。
+#
+# 判定规则（先定规则，再逐个套用，避免「看结果调分类」）：
+#   看话题的**争论焦点**，不看发言中提到的所有实体。
+#   - 焦点是「某项政策 / 制度 / 做法应否存在、是否合理」 → T3（制度指向）
+#   - 焦点是「某个可指名的行动者（个人 / 群体 / 机构 / 国家）如何」 → T5（行动者指向）
+#
+# 为什么必须人工编码：这 16 个话题没有「主楼」文本，规则标注器只能看到标题，
+# 而标题本身常是省略句（「外国人」「文科生」「红黄蓝」），线索不足。
+# 16 个话题可以一次性全编，成本约 1 小时，没有理由交给规则猜。
+
+version: 1
+dataset: weibo16
+thread_prefix: "weibo16-"
+unit: topic
+coder: ramon+assistant
+date: 2026-10-21
+
+notes: |
+  两个话题（红黄蓝、马云谈996）的焦点在「量刑是否过轻」与「996 是否合理」，
+  即制度而非行动者，故编为 T3，但置信度记为 medium。
+  分析时对这两个话题做敏感性检验：剔除后重跑，看结论是否稳定。
+
+topics:
+  HM:
+    code: T5
+    subtype: org
+    confidence: high
+    focus: "是否应抵制 H&M 这家企业"
+    rationale: "发言多为对该企业产品质量与行为的评价（「HM 贵质量差」），落点是企业本身。"
+  sex:
+    code: T3
+    subtype: policy
+    confidence: high
+    focus: "性教育应否进入中小学课程"
+    rationale: "争点是课程设置这一制度安排，不指向任何具体行动者。"
+  中美:
+    code: T5
+    subtype: nation
+    confidence: high
+    focus: "中美对抗中如何评价对方"
+    rationale: "发言落点是对美国行为的评价与对抗姿态（「美国无权干涉」），国家即行动者。"
+  代孕:
+    code: T3
+    subtype: policy
+    confidence: high
+    focus: "代孕应否合法 / 如何规制"
+    rationale: "争点是合法性与监管制度。"
+  外国人:
+    code: T5
+    subtype: group
+    confidence: high
+    focus: "外国人是否享受超国民待遇"
+    rationale: "以群体为评价对象，典型群体审判语境。"
+  孙小果:
+    code: T5
+    subtype: person
+    confidence: high
+    focus: "孙小果案中的个人罪行"
+    rationale: "落点是具体个人及其行为。"
+  文科生:
+    code: T5
+    subtype: group
+    confidence: high
+    focus: "文科生这一群体是否有价值"
+    rationale: "「文科生无用论」直接以群体为对象，全称量化常见。"
+  日本核污水:
+    code: T5
+    subtype: nation
+    confidence: high
+    focus: "日本排海行为的对错"
+    rationale: "落点是日本这一行动者。"
+  瑞丽疫情:
+    code: T3
+    subtype: policy
+    confidence: high
+    focus: "边境防控政策是否过度"
+    rationale: "争点是防控措施的尺度，属政策。"
+  疫苗:
+    code: T3
+    subtype: policy
+    confidence: high
+    focus: "是否应接种 / 是否应强制"
+    rationale: "争点是接种政策与个人选择权。"
+  红黄蓝:
+    code: T5
+    subtype: policy
+    confidence: medium
+    focus: "虐童案量刑是否过轻"
+    rationale: "抽样显示发言集中在量刑比较（「写黄书判10年虐童一年半」），落点是司法尺度而非某个行动者。"
+  蓬佩奥病毒:
+    code: T5
+    subtype: person
+    confidence: high
+    focus: "蓬佩奥个人言行的对错"
+    rationale: "以具体个人为对象。"
+  阿里巴巴:
+    code: T5
+    subtype: org
+    confidence: high
+    focus: "阿里这家企业是否被针对 / 资本的角色"
+    rationale: "落点是企业与资本，机构即行动者。"
+  韩国吃播道歉:
+    code: T5
+    subtype: person
+    confidence: high
+    focus: "吃播博主个人的道歉行为"
+    rationale: "以具体个人为对象。"
+  韩国幽灵整容:
+    code: T5
+    subtype: group
+    confidence: high
+    focus: "韩国整容业这一群体"
+    rationale: "以行业/群体为对象。"
+  马云谈996:
+    code: T5
+    subtype: policy
+    confidence: medium
+    focus: "996 工作制是否合理"
+    rationale: "争点是工时制度，虽常提到马云，但评价落点在制度。"

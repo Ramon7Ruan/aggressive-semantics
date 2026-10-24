@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>攻击对象标注</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --fg:#1c1c1e; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#2563eb; --accent-fg:#fff; --warn:#b45309;
+    --none:#6b7280; --opinion:#0f766e; --person:#b45309; --group:#9d174d;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#141518; --card:#1d1f24; --fg:#f2f3f5; --muted:#9aa0aa; --line:#2c2f36;
+      --accent:#4f8cff; --accent-fg:#0b0c0e; --warn:#fbbf24;
+      --none:#9aa0aa; --opinion:#2dd4bf; --person:#fbbf24; --group:#f472b6;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif}
+  .wrap{max-width:820px;margin:0 auto;padding:24px 20px 80px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  h1{font-size:16px;margin:0;font-weight:600}
+  .progress{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+  .progress > i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+  .count{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;min-width:76px;text-align:right}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12.5px;margin-bottom:12px}
+  .topic{font-weight:600;color:var(--fg)}
+  .text{white-space:pre-wrap;word-break:break-word;font-size:19px;line-height:1.75;
+        min-height:96px;max-height:46vh;overflow:auto;
+        padding:14px;border-radius:10px;background:color-mix(in srgb,var(--bg) 70%,transparent)}
+  .opts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+         background:var(--card);color:var(--fg);padding:11px 14px;text-align:left;
+         display:flex;align-items:center;gap:10px;transition:transform .06s,border-color .12s}
+  button:hover{border-color:var(--accent)}
+  button:active{transform:scale(.99)}
+  kbd{font:12px ui-monospace,SFMono-Regular,monospace;padding:2px 6px;border-radius:5px;
+      border:1px solid var(--line);color:var(--muted);background:var(--bg)}
+  .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .none .dot{background:var(--none)} .opinion .dot{background:var(--opinion)}
+  .person .dot{background:var(--person)} .group .dot{background:var(--group)}
+  .muted-opt{color:var(--muted)}
+  .row{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}
+  .link{background:none;border:none;color:var(--accent);padding:6px 2px;font-size:13px}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:10px;line-height:1.7}
+  .done{text-align:center;padding:10px 0}
+  .done b{font-size:17px}
+  .table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+  .table th,.table td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left}
+  .table td:last-child{font-variant-numeric:tabular-nums}
+  .warn{color:var(--warn)}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>攻击对象标注</h1>
+    <div class="progress"><i id="bar"></i></div>
+    <div class="count" id="count">0 / 0</div>
+  </header>
+
+  <div id="main">
+    <div class="card">
+      <div class="meta">
+        <span>第 <b id="idx">1</b> 条 · 话题 <span class="topic" id="topic">—</span></span>
+        <span id="prevTag" class="muted-opt"></span>
+      </div>
+      <div class="text" id="text">—</div>
+
+      <div class="opts">
+        <button class="none"    data-v="none"><span class="dot"></span>无攻击 <kbd>1</kbd></button>
+        <button class="opinion" data-v="opinion"><span class="dot"></span>攻击观点/立场 <kbd>2</kbd></button>
+        <button class="person"  data-v="person"><span class="dot"></span>攻击特定个人 <kbd>3</kbd></button>
+        <button class="group"   data-v="group"><span class="dot"></span>攻击群体/机构/国家 <kbd>4</kbd></button>
+      </div>
+
+      <div class="row">
+        <button class="muted-opt" data-v="uncertain" style="flex:1"><span class="dot" style="background:var(--line)"></span>拿不准，先跳过 <kbd>5</kbd></button>
+      </div>
+
+      <div class="hint">
+        判定看<b>这句话在攻击谁</b>，不看话题本身是谁。没有指向任何对象的情绪宣泄、脏话，记「无攻击」。
+        辱骂某个地方/职业/性别/国籍的人，记「群体」。骂具体某人（含「你」指代对方）记「个人」。
+      </div>
+    </div>
+  </div>
+
+  <div id="finish" class="card hide">
+    <div class="done">
+      <b>已标完 <span id="doneN">0</span> 条</b>
+      <p class="hint" id="doneHint"></p>
+    </div>
+    <div class="row">
+      <button id="export" style="flex:1">导出 CSV</button>
+      <button id="again" class="muted-opt" style="flex:1">检查修改</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="link" id="undo">← 上一条（Backspace）</button>
+    <button class="link" id="save" style="margin-left:auto">导出进度 CSV</button>
+    <button class="link" id="reset">清空重来</button>
+  </div>
+
+  <p class="hint" id="status"></p>
+</div>
+
+<script>
+const DATA = __DATA__;
+const KEY = "kappa-annot-v1";
+const VALID = ["none","opinion","person","group","uncertain"];
+
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e){ state = {}; }
+let cur = 0;
+
+const $ = s => document.querySelector(s);
+
+function firstUnmarked(){
+  for (let i = 0; i < DATA.length; i++){
+    if (!VALID.includes(state[DATA[i].id])) return i;
+  }
+  return DATA.length;
+}
+
+function persist(){
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+function render(){
+  const total = DATA.length;
+  const marked = DATA.filter(d => VALID.includes(state[d.id])).length;
+  $("#bar").style.width = (total ? marked / total * 100 : 0) + "%";
+  $("#count").textContent = marked + " / " + total;
+
+  if (cur >= total){
+    $("#main").classList.add("hide");
+    $("#finish").classList.remove("hide");
+    $("#doneN").textContent = marked;
+    const unc = DATA.filter(d => state[d.id] === "uncertain").length;
+    $("#doneHint").textContent = unc
+      ? `其中 ${unc} 条标为「拿不准」。这些在算 κ 时会被单独列出，不计入一致率分母。`
+      : "没有「拿不准」的条目。";
+    return;
+  }
+  $("#main").classList.remove("hide");
+  $("#finish").classList.add("hide");
+
+  const d = DATA[cur];
+  $("#idx").textContent = cur + 1;
+  $("#topic").textContent = d.topic;
+  $("#text").textContent = d.text;
+  const p = state[d.id];
+  $("#prevTag").textContent = VALID.includes(p) ? "当前：" + p : "";
+}
+
+function set(v){
+  const d = DATA[cur];
+  if (!d) return;
+  state[d.id] = v;
+  persist();
+  cur = Math.min(cur + 1, DATA.length);
+  render();
+}
+
+function undo(){
+  cur = Math.max(0, cur - 1);
+  render();
+}
+
+document.querySelectorAll("[data-v]").forEach(b => {
+  b.addEventListener("click", () => set(b.dataset.v));
+});
+
+document.addEventListener("keydown", e => {
+  const map = {"1":"none","2":"opinion","3":"person","4":"group","5":"uncertain"};
+  if (map[e.key]){ e.preventDefault(); set(map[e.key]); }
+  else if (e.key === "Backspace"){ e.preventDefault(); undo(); }
+});
+
+$("#undo").addEventListener("click", undo);
+$("#again").addEventListener("click", () => { cur = 0; render(); });
+$("#reset").addEventListener("click", () => {
+  if (!confirm("清空所有标注？此操作不可撤销。")) return;
+  state = {}; persist(); cur = 0; render();
+});
+
+function toCSV(){
+  const lines = ["id,target"];
+  DATA.forEach(d => {
+    const v = state[d.id];
+    if (VALID.includes(v)) lines.push(d.id + "," + v);
+  });
+  return lines.join("\n") + "\n";
+}
+
+function download(name){
+  const blob = new Blob(["\ufeff" + toCSV()], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+$("#export").addEventListener("click", () => download("kappa_sheet_A.csv"));
+$("#save").addEventListener("click", () => download("kappa_sheet_进度.csv"));
+
+cur = firstUnmarked();
+render();
+$("#status").textContent = "标注自动存在本机浏览器（localStorage），刷新不丢。标完点「导出 CSV」。";
+</script>
+</body>
+</html>

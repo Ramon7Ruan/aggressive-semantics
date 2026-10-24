@@ -1,0 +1,25 @@
+[project]
+name = "discourse-kit"
+version = "0.2.0"
+description = "网络社区话语形态分析的指标与编码方案（数据源无关）"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "PyYAML>=6.0",
+    "requests>=2.31",
+    "lxml>=5.0",
+]
+
+[project.optional-dependencies]
+# jieba 仅影响 MATTR 的切分粒度，缺失时自动退回字符级切分
+full = ["jieba>=0.42"]
+
+[project.scripts]
+discourse-kit = "discourse_kit.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# 默认不跑 live（会真实联网）；需要时 pytest -m live
+addopts = "-m 'not live' --basetemp=.pytest_tmp -p no:cacheprovider"
+markers = ["live: 需要真实网络的合规回归测试（默认跳过）"]
